@@ -1,5 +1,6 @@
 package gonnie
 
-func direct(ctx *Context, s ...string) {
+func direct(ctx *Context, u uri, s ...string) error {
 	ctx.PushMessage()
+	return nil
 }

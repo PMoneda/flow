@@ -38,13 +38,13 @@ func (r *Route) Log(msg string) IRoute {
 
 // SetHeader in message
 func (r *Route) SetHeader(key string, value string) IRoute {
-	r.context.stack.Top().GetOutHeader().Add(key, value)
+	r.context.GetMessage().GetInHeader().Add(key, value)
 	return r
 }
 
 // SetBody in message
 func (r *Route) SetBody(body string) IRoute {
-	r.context.GetMessage().GetOut().WriteString(body)
+	r.context.GetMessage().GetIn().WriteString(body)
 	return r
 }
 

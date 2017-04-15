@@ -10,6 +10,20 @@ func (h Header) Add(key, value string) {
 	h[key] = value
 }
 
+//Get entry from map
+func (h Header) Get(key string) string {
+	return h[key]
+}
+
+//ListKeys list keys from Map
+func (h Header) ListKeys() []string {
+	keys := make([]string, 0, len(h))
+	for k := range h {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
 //Exchange is a middleware message used between process
 type Exchange struct {
 	inHead  Header
@@ -35,14 +49,16 @@ func (e *Exchange) GetInHeader() Header {
 
 // GetOutHeader get output header
 func (e *Exchange) GetOutHeader() Header {
-	return e.inHead
+	return e.outHead
 }
 
 // NewExchange creates new exchange message
 func NewExchange() *Exchange {
 	e := Exchange{
-		in:  bytes.NewBuffer(nil),
-		out: bytes.NewBuffer(nil),
+		inHead:  make(Header),
+		outHead: make(Header),
+		in:      bytes.NewBuffer(nil),
+		out:     bytes.NewBuffer(nil),
 	}
 	return &e
 }

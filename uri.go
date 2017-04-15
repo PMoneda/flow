@@ -1,6 +1,7 @@
 package gonnie
 
 import "net/url"
+import "fmt"
 
 type uri struct {
 	protocol string
@@ -20,9 +21,10 @@ func processURI(u string) (uri, error) {
 	return ur, nil
 }
 
-var execMux = map[string]func(*Context, ...string){
+var execMux = map[string]func(*Context, uri, ...string) error{
 	"direct": direct,
-	"http":   http,
+	"http":   _http,
+	"https":  _https,
 	"file":   file,
 }
 
@@ -31,6 +33,9 @@ func execURI(ctx *Context, u ...string) error {
 	if err != nil {
 		return err
 	}
-	execMux[ur.protocol](ctx, u...)
+	errExec := execMux[ur.protocol](ctx, ur, u...)
+	if errExec != nil {
+		fmt.Println(errExec.Error())
+	}
 	return nil
 }
