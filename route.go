@@ -12,6 +12,7 @@ type IRoute interface {
 	SetBody(string) IRoute
 	Log(string) IRoute
 	Body() string
+	Header() Header
 }
 
 // Route is the struct that execute flow
@@ -63,9 +64,14 @@ func (r *Route) Processor(p Processor) IRoute {
 	return r
 }
 
-// Processor execute a function to process message
+// Body get body from message
 func (r *Route) Body() string {
 	return r.context.GetMessage().GetOut().String()
+}
+
+// Header get header from message
+func (r *Route) Header() Header {
+	return r.context.GetMessage().GetOutHeader()
 }
 
 // NewRoute return a new and empty route
