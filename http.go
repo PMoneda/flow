@@ -36,6 +36,9 @@ func _https(ctx *Context, u uri, s ...string) error {
 	if errResponse != nil {
 		return errResponse
 	}
+	for k := range resp.Header {
+		ctx.GetMessage().GetOutHeader().Add(k, resp.Header.Get(k))
+	}
 	_, errWrite := ctx.GetMessage().GetOut().Write(data)
 	if errWrite != nil {
 		return errWrite

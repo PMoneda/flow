@@ -4,12 +4,6 @@ import "testing"
 import "strconv"
 import "fmt"
 
-func TestShouldCreateAWorkFlow(t *testing.T) {
-	c := NewContext()
-	r := NewRoute(c)
-	r = r.From("direct://hello").To("http://somesite.com").To("file://destiny?name=ggg.txt")
-}
-
 func TestShouldExecuteProcess(t *testing.T) {
 	c := NewContext()
 	r := NewRoute(c)

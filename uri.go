@@ -35,6 +35,7 @@ func execURI(ctx *Context, u ...string) error {
 	}
 	errExec := execMux[ur.protocol](ctx, ur, u...)
 	if errExec != nil {
+		fmt.Println(u)
 		fmt.Println(errExec.Error())
 	}
 	return nil

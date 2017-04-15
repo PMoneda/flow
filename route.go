@@ -3,6 +3,9 @@ package gonnie
 // Processor is the template for process callback
 type Processor func(*Exchange)
 
+//Transform date from template to other
+type Transform string
+
 // IRoute implements route builder pattern
 type IRoute interface {
 	From(string) IRoute
@@ -13,6 +16,7 @@ type IRoute interface {
 	Log(string) IRoute
 	Body() string
 	Header() Header
+	Transform(Transform, Transform) IRoute
 }
 
 // Route is the struct that execute flow
@@ -72,6 +76,11 @@ func (r *Route) Body() string {
 // Header get header from message
 func (r *Route) Header() Header {
 	return r.context.GetMessage().GetOutHeader()
+}
+
+//Transform data from template A to template B
+func (r *Route) Transform(from, to Transform) IRoute {
+	return r
 }
 
 // NewRoute return a new and empty route
