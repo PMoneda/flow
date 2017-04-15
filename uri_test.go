@@ -1,17 +1,23 @@
 package gonnie
 
 import "testing"
-import "net/url"
-import "fmt"
 
 func TestShouldParseURL(t *testing.T) {
 	u := "file://desktop.documents?name=teste.txt"
-	url, err := url.Parse(u)
+	ur, err := processURI(u)
 	if err != nil {
 		t.Fail()
 	}
-	fmt.Println(url.Host)
-	fmt.Println(url.RawQuery)
-	fmt.Println(url.Scheme)
 
+	if ur.protocol != "file" {
+		t.Fail()
+	}
+}
+
+func TestBaseFlow(t *testing.T) {
+	ctx := NewContext()
+	route := NewRoute(ctx)
+	route.From("direct://route").Log("A").Log("B").Log("C")
+	ctx.GetLog().Print()
+	ctx.GetLog().Clear()
 }

@@ -1,14 +1,14 @@
 package gonnie
 
-type Processor func(Exchange) Exchange
+type Processor func(Exchange)
 
 // IRoute implements route builder pattern
 type IRoute interface {
 	From(string) IRoute
 	To(string) IRoute
-	SetHeader(string, interface{}) IRoute
+	SetHeader(string, string) IRoute
 	Processor(Processor) IRoute
-	SetBody(interface{}) IRoute
+	SetBody(string) IRoute
 	Log(string) IRoute
 }
 
@@ -19,26 +19,38 @@ type Route struct {
 
 // From start point
 func (r *Route) From(uri string) IRoute {
-	return r
+	return r.execSimple(uri)
 }
 
 // To Next Point
 func (r *Route) To(uri string) IRoute {
-	return r
+	return r.execSimple(uri)
 }
 
 // Log message
 func (r *Route) Log(msg string) IRoute {
+	log(r.context, msg)
 	return r
 }
 
 // SetHeader in message
-func (r *Route) SetHeader(key string, value interface{}) IRoute {
+func (r *Route) SetHeader(key string, value string) IRoute {
+	r.context.stack.Top().GetOutHeader().Add(key, value)
 	return r
 }
 
 // SetBody in message
-func (r *Route) SetBody(body interface{}) IRoute {
+func (r *Route) SetBody(body string) IRoute {
+	r.context.GetMessage().GetOut().WriteString(body)
+	return r
+}
+
+func (r *Route) execSimple(p ...string) IRoute {
+	err := execURI(r.context, p...)
+	if err != nil {
+		r.context.stack.Pop()
+		panic(err)
+	}
 	return r
 }
 

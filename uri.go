@@ -20,6 +20,17 @@ func processURI(u string) (uri, error) {
 	return ur, nil
 }
 
-func exec(ctx *Context, u uri) {
+var execMux = map[string]func(*Context, ...string){
+	"direct": direct,
+	"http":   http,
+	"file":   file,
+}
 
+func execURI(ctx *Context, u ...string) error {
+	ur, err := processURI(u[0])
+	if err != nil {
+		return err
+	}
+	execMux[ur.protocol](ctx, u...)
+	return nil
 }
