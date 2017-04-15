@@ -87,6 +87,9 @@ func (c *Context) PopMessage() *Exchange {
 
 // GetMessage from context
 func (c *Context) GetMessage() *Exchange {
+	if len(c.stack) == 0 {
+		c.PushMessage()
+	}
 	return c.stack.Top()
 }
 

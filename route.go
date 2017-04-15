@@ -1,6 +1,7 @@
 package gonnie
 
-type Processor func(Exchange)
+// Processor is the template for process callback
+type Processor func(*Exchange)
 
 // IRoute implements route builder pattern
 type IRoute interface {
@@ -10,6 +11,7 @@ type IRoute interface {
 	Processor(Processor) IRoute
 	SetBody(string) IRoute
 	Log(string) IRoute
+	Body() string
 }
 
 // Route is the struct that execute flow
@@ -56,7 +58,14 @@ func (r *Route) execSimple(p ...string) IRoute {
 
 // Processor execute a function to process message
 func (r *Route) Processor(p Processor) IRoute {
+	r.context.PushMessage()
+	p(r.context.GetMessage())
 	return r
+}
+
+// Processor execute a function to process message
+func (r *Route) Body() string {
+	return r.context.GetMessage().GetOut().String()
 }
 
 // NewRoute return a new and empty route

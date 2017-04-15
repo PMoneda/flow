@@ -18,6 +18,5 @@ func TestBaseFlow(t *testing.T) {
 	ctx := NewContext()
 	route := NewRoute(ctx)
 	route.From("direct://route").Log("A").Log("B").Log("C")
-	ctx.GetLog().Print()
 	ctx.GetLog().Clear()
 }
