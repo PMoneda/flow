@@ -98,3 +98,8 @@ func NewRoute(c *Context) IRoute {
 	r.context = c
 	return &r
 }
+
+// NewRouteWithContext return a new route with a new Context
+func NewRouteWithContext() IRoute {
+	return NewRoute(NewContext())
+}

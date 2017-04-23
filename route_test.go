@@ -5,8 +5,7 @@ import "strconv"
 import "fmt"
 
 func TestShouldExecuteProcess(t *testing.T) {
-	c := NewContext()
-	r := NewRoute(c)
+	r := NewRouteWithContext()
 	str := r.Processor(_sum).Processor(_sum).Processor(_sum).Body()
 	if str != "3" {
 		t.Fail()
@@ -24,8 +23,7 @@ func _sum(ext *Exchange) {
 }
 
 func TestShouldConsumeRestService(t *testing.T) {
-	c := NewContext()
-	r := NewRoute(c)
+	r := NewRouteWithContext()
 	type Root struct {
 		Response struct {
 			Messages []string `json:"messages"`
@@ -74,8 +72,7 @@ func TestShouldConvertJSONInputMessageToOutPutUsingTransform(t *testing.T) {
 		</country>
 	`
 
-	c := NewContext()
-	r := NewRoute(c)
+	r := NewRouteWithContext()
 	b := r.From("http://services.groupkt.com/state/get/IND/UP").Transform(from, "json", to).Body()
 	if b != expected {
 		t.Fail()
