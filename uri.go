@@ -2,6 +2,7 @@ package gonnie
 
 import "net/url"
 import "fmt"
+import "sync"
 
 type uri struct {
 	protocol string
@@ -23,6 +24,8 @@ func processURI(u string) (uri, error) {
 	return ur, nil
 }
 
+var _lockConectors sync.Mutex
+
 var execMux = map[string]func(*Context, uri, ...string) error{
 	"direct": direct,
 	"http":   _http,
@@ -41,4 +44,11 @@ func execURI(ctx *Context, u ...string) error {
 		fmt.Println(errExec.Error())
 	}
 	return nil
+}
+
+//RegisterConector register a new conector to use as From("my-connector://...")
+func RegisterConector(name string, callback func(ctx *Context, u uri, s ...string) error) {
+	_lockConectors.Lock()
+	defer _lockConectors.Unlock()
+	execMux[name] = callback
 }
