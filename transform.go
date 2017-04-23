@@ -30,14 +30,17 @@ func (original Transform) TransformFromJSON(from, to Transform) string {
 	oriParsed, _ := gabs.ParseJSON([]byte(original))
 	parsedMap := make(map[string]string)
 	for k, v := range values {
-		s1 := strings.Replace(v, "\"{{", "", -1)
-		s1 = strings.Replace(s1, "}}\"", "", -1)
-		parsedMap[s1] = oriParsed.Path(k).String()
-
+		parsedMap[cleanString(v)] = cleanString(oriParsed.Path(k).String())
 	}
 	return generateTransformedMessage(parsedMap, to)
 }
-
+func cleanString(s string) string {
+	s1 := strings.Replace(s, "{{", "", -1)
+	s1 = strings.Replace(s1, "}}", "", -1)
+	s1 = strings.Replace(s1, "\"", "", -1)
+	s1 = strings.Replace(s1, "&#34;", "", -1)
+	return s1
+}
 func generateTransformedMessage(values map[string]string, to Transform) string {
 	buf := bytes.NewBuffer(nil)
 	t := template.Must(template.New("transform").Funcs(funcMap).Parse(string(to)))
@@ -86,18 +89,21 @@ func walkTree(elem *etree.Element, path string, translator map[string]string) {
 func walkTreeJSON(ch map[string]*gabs.Container, path *string, values map[string]string) {
 
 	for k, v := range ch {
+		var old string
 		if *path == "" {
 			*path = k
 		} else {
+			old = *path
 			*path = *path + "." + k
 		}
 
 		chd, err := v.ChildrenMap()
 		if err == nil {
 			walkTreeJSON(chd, path, values)
+			*path = ""
 		} else {
 			values[*path] = v.String()
-			*path = ""
+			*path = old
 		}
 
 	}

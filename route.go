@@ -16,7 +16,7 @@ type IRoute interface {
 	Log(string) IRoute
 	Body() string
 	Header() Header
-	Transform(Transform, Transform) IRoute
+	Transform(Transform, string, Transform) IRoute
 }
 
 // Route is the struct that execute flow
@@ -79,7 +79,16 @@ func (r *Route) Header() Header {
 }
 
 //Transform data from template A to template B
-func (r *Route) Transform(from, to Transform) IRoute {
+func (r *Route) Transform(from Transform, mode string, to Transform) IRoute {
+	r.context.PushMessage()
+	t := Transform(r.context.GetMessage().GetIn().String())
+	var trans string
+	if "json" == mode {
+		trans = string(t.TransformFromJSON(from, to))
+	} else {
+		trans = string(t.TransformFromXML(from, to))
+	}
+	r.context.GetMessage().GetOut().WriteString(trans)
 	return r
 }
 

@@ -1,6 +1,9 @@
 package gonnie
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 var data Transform = `<book><a>10</a></book><b>3</b>`
 var inputFormat Transform = `<book><a>{{age}}</a></book><b>{{grade}}</b>`
@@ -29,4 +32,5 @@ func TestShouldTransformDataJSONToXML(t *testing.T) {
 	if transformed != `Hello! How old are you? 10? \n-No, I'm 2` {
 		t.Fail()
 	}
+	fmt.Println(transformed)
 }

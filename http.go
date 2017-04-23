@@ -14,7 +14,13 @@ func _http(ctx *Context, u uri, s ...string) error {
 func _https(ctx *Context, u uri, s ...string) error {
 	skip := u.options.Get("insecureSkipVerify")
 	client := getClient(skip)
-	req, err := http.NewRequest(u.options.Get("method"), u.options.Get("url"), ctx.GetMessage().GetIn())
+	var req *http.Request
+	var err error
+	if len(u.options) > 0 {
+		req, err = http.NewRequest(u.options.Get("method"), u.options.Get("url"), ctx.GetMessage().GetIn())
+	} else {
+		req, err = http.NewRequest("GET", u.raw, ctx.GetMessage().GetIn())
+	}
 	if err != nil {
 		return err
 	}

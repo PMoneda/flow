@@ -7,6 +7,7 @@ type uri struct {
 	protocol string
 	host     string
 	options  url.Values
+	raw      string
 }
 
 func processURI(u string) (uri, error) {
@@ -18,6 +19,7 @@ func processURI(u string) (uri, error) {
 	ur.host = url.Host
 	ur.protocol = url.Scheme
 	ur.options = url.Query()
+	ur.raw = u
 	return ur, nil
 }
 
