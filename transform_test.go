@@ -12,3 +12,21 @@ func TestShouldTransformData(t *testing.T) {
 		t.Fail()
 	}
 }
+
+var letterFormat Transform = `Hello! How old are you? {{.age}}? \n-No, I'm {{.grade}}`
+
+func TestShouldTransformDataXMLToLetter(t *testing.T) {
+	transformed := data.TransformFromXML(inputFormat, letterFormat)
+	if transformed != `Hello! How old are you? 10? \n-No, I'm 3` {
+		t.Fail()
+	}
+}
+
+func TestShouldTransformDataJSONToXML(t *testing.T) {
+	var json Transform = `{ "first": 10, "second": 2, "third":{"a":1,"b":6,"c":7}, "bla":[1,2,3] }`
+	var from Transform = `{ "first": "{{age}}", "second": "{{grade}}", "third":{"a":"{{test}}"} }`
+	transformed := json.TransformFromJSON(from, letterFormat)
+	if transformed != `Hello! How old are you? 10? \n-No, I'm 2` {
+		t.Fail()
+	}
+}

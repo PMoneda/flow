@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"strings"
 
+	"github.com/Jeffail/gabs"
 	"github.com/beevik/etree"
 )
 
@@ -18,6 +19,25 @@ func (original Transform) TransformFromXML(from, to Transform) string {
 	values := createMapValues(translator, doc)
 	return generateTransformedMessage(values, to)
 }
+
+//TransformFromJSON data from A to B
+func (original Transform) TransformFromJSON(from, to Transform) string {
+	jsonParsed, _ := gabs.ParseJSON([]byte(from))
+	ch, _ := jsonParsed.ChildrenMap()
+	path := ""
+	values := make(map[string]string)
+	walkTreeJSON(ch, &path, values)
+	oriParsed, _ := gabs.ParseJSON([]byte(original))
+	parsedMap := make(map[string]string)
+	for k, v := range values {
+		s1 := strings.Replace(v, "\"{{", "", -1)
+		s1 = strings.Replace(s1, "}}\"", "", -1)
+		parsedMap[s1] = oriParsed.Path(k).String()
+
+	}
+	return generateTransformedMessage(parsedMap, to)
+}
+
 func generateTransformedMessage(values map[string]string, to Transform) string {
 	buf := bytes.NewBuffer(nil)
 	t := template.Must(template.New("transform").Funcs(funcMap).Parse(string(to)))
@@ -60,5 +80,25 @@ func walkTree(elem *etree.Element, path string, translator map[string]string) {
 	for _, node := range elem.ChildElements() {
 		path = path + "/" + node.Tag
 		walkTree(node, path, translator)
+	}
+}
+
+func walkTreeJSON(ch map[string]*gabs.Container, path *string, values map[string]string) {
+
+	for k, v := range ch {
+		if *path == "" {
+			*path = k
+		} else {
+			*path = *path + "." + k
+		}
+
+		chd, err := v.ChildrenMap()
+		if err == nil {
+			walkTreeJSON(chd, path, values)
+		} else {
+			values[*path] = v.String()
+			*path = ""
+		}
+
 	}
 }
