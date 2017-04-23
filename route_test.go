@@ -3,8 +3,6 @@ package gonnie
 import "testing"
 import "strconv"
 import "fmt"
-import "encoding/json"
-import "encoding/xml"
 
 func TestShouldExecuteProcess(t *testing.T) {
 	c := NewContext()
@@ -41,16 +39,9 @@ func TestShouldConsumeRestService(t *testing.T) {
 	r = r.From("http://services.groupkt.com/country/get/all")
 	r = r.Processor(func(e *Exchange) {
 		d := Root{}
-		err := json.Unmarshal(e.GetIn().Bytes(), &d)
-		if err != nil {
+		if e.BindJSON(&d) != nil || e.WriteXML(d) != nil {
 			t.Fail()
 		}
-		x, errXML := xml.Marshal(d)
-		if errXML != nil {
-			t.Fail()
-		}
-
-		e.GetOut().Write(x)
 	})
 	r = nil
 }

@@ -1,6 +1,10 @@
 package gonnie
 
-import "bytes"
+import (
+	"bytes"
+	"encoding/json"
+	"encoding/xml"
+)
 
 //Header represent a key-value header pattern
 type Header map[string]string
@@ -50,6 +54,36 @@ func (e *Exchange) GetInHeader() Header {
 // GetOutHeader get output header
 func (e *Exchange) GetOutHeader() Header {
 	return e.outHead
+}
+
+//BindJSON binds json body to interface
+func (e *Exchange) BindJSON(v interface{}) error {
+	return json.Unmarshal(e.GetIn().Bytes(), &v)
+}
+
+//WriteJSON marshall interface to JSON and set body
+func (e *Exchange) WriteJSON(v interface{}) error {
+	x, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+	e.GetOut().Write(x)
+	return nil
+}
+
+//WriteXML marshall interface to XML and set body
+func (e *Exchange) WriteXML(v interface{}) error {
+	x, errXML := xml.Marshal(v)
+	if errXML != nil {
+		return errXML
+	}
+	e.GetOut().Write(x)
+	return nil
+}
+
+//BindXML binds xml body to interface
+func (e *Exchange) BindXML(v interface{}) error {
+	return xml.Unmarshal(e.GetIn().Bytes(), &v)
 }
 
 // NewExchange creates new exchange message
