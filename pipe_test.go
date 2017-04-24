@@ -1,29 +1,42 @@
 package gonnie
 
-import "testing"
-import "strconv"
-import "fmt"
+import (
+	"testing"
+	"time"
+)
 
-func TestShouldExecuteProcess(t *testing.T) {
-	r := NewRouteWithContext()
-	str := r.Processor(_sum).Processor(_sum).Processor(_sum).Body()
-	if str != "3" {
+func TestPipeProcessor(t *testing.T) {
+	p := NewPipe()
+	final := p.From("direct://a").Processor(func(m *ExchangeMessage, out Message, next func()) {
+		go func() {
+			time.Sleep(1 * time.Second)
+			m.SetBody(1)
+			out <- m
+			next()
+		}()
+	}).Processor(func(m *ExchangeMessage, out Message, next func()) {
+		go func() {
+			time.Sleep(1 * time.Second)
+			m.SetBody(m.GetBody().(int) + 1)
+			out <- m
+			next()
+		}()
+	}).Processor(func(m *ExchangeMessage, out Message, next func()) {
+		go func() {
+			time.Sleep(1 * time.Second)
+			m.SetBody(m.GetBody().(int) + 1)
+			out <- m
+			next()
+		}()
+	}).Body()
+
+	if 3 != final.(int) {
 		t.Fail()
 	}
 }
-func _sum(ext *Exchange) {
-	body := ext.GetIn().String()
-	if body != "" {
-		n, _ := strconv.Atoi(body)
-		ext.GetOut().WriteString(fmt.Sprintf("%d", n+1))
-	} else {
-		ext.GetOut().WriteString("1")
-	}
-
-}
 
 func TestShouldConsumeRestService(t *testing.T) {
-	r := NewRouteWithContext()
+	r := NewPipe()
 	type Root struct {
 		Response struct {
 			Messages []string `json:"messages"`
@@ -35,7 +48,7 @@ func TestShouldConsumeRestService(t *testing.T) {
 		} `json:"RestResponse"`
 	}
 	r = r.From("http://services.groupkt.com/country/get/all")
-	r = r.Processor(func(e *Exchange) {
+	r = r.Processor(func(e *ExchangeMessage, out Message, next func()) {
 		d := Root{}
 		if e.BindJSON(&d) != nil || e.WriteXML(d) != nil {
 			t.Fail()
@@ -44,7 +57,7 @@ func TestShouldConsumeRestService(t *testing.T) {
 	r = nil
 }
 
-func TestShouldConvertJSONInputMessageToOutPutUsingTransform(t *testing.T) {
+func TestShouldConvertJSONInputMessageToOutPutUsingTransformOnPipe(t *testing.T) {
 	var from Transform = `
 		{
 			"RestResponse" : {				
@@ -72,7 +85,7 @@ func TestShouldConvertJSONInputMessageToOutPutUsingTransform(t *testing.T) {
 		</country>
 	`
 
-	r := NewRouteWithContext()
+	r := NewPipe()
 	b := r.From("http://services.groupkt.com/state/get/IND/UP").Transform(from, "json", to).Body()
 	if b != expected {
 		t.Fail()
