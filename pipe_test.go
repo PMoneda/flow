@@ -53,6 +53,8 @@ func TestShouldConsumeRestService(t *testing.T) {
 		if e.BindJSON(&d) != nil || e.WriteXML(d) != nil {
 			t.Fail()
 		}
+		out <- e
+		next()
 	})
 	r = nil
 }
