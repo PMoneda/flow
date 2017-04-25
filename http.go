@@ -25,9 +25,21 @@ func getClient(skip string) *http.Client {
 	}
 	return client
 }
-
 func httpConector(next func(), e *ExchangeMessage, out Message, u uri, params ...interface{}) error {
-	skip := u.options.Get("insecureSkipVerify")
+	var skip string
+	var opts map[string]string
+	method := "GET"
+	authMethod := ""
+	username := ""
+	password := ""
+	if len(params) > 0 {
+		opts = params[0].(map[string]string)
+		skip = opts["insecureSkipVerify"]
+		method = opts["method"]
+		authMethod = opts["auth"]
+		username = opts["username"]
+		password = opts["password"]
+	}
 	client := getClient(skip)
 	var req *http.Request
 	var err error
@@ -43,17 +55,12 @@ func httpConector(next func(), e *ExchangeMessage, out Message, u uri, params ..
 			body = strings.NewReader(string(j))
 		}
 	}
-	if len(u.options) > 0 {
-		req, err = http.NewRequest(u.options.Get("method"), u.options.Get("url"), body)
-	} else {
-		req, err = http.NewRequest("GET", u.raw, body)
-	}
+	req, err = http.NewRequest(method, u.raw, body)
 	if err != nil {
 		return err
 	}
-	authMethod := u.options.Get("auth")
 	if authMethod == "basic" {
-		req.SetBasicAuth(u.options.Get("user"), u.options.Get("password"))
+		req.SetBasicAuth(username, password)
 	}
 	header := e.head
 	keys := header.ListKeys()
@@ -71,7 +78,7 @@ func httpConector(next func(), e *ExchangeMessage, out Message, u uri, params ..
 	}
 	newData := NewExchangeMessage()
 	for k := range resp.Header {
-		newData.SetHead(k, resp.Header.Get(k))
+		newData.SetHeader(k, resp.Header.Get(k))
 	}
 	newData.SetBody(string(data))
 	out <- newData

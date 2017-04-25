@@ -23,6 +23,7 @@ type IPipe interface {
 	SetBody(interface{}) IPipe
 	Processor(PipeProcessor) IPipe
 	Body() interface{}
+
 	Transform(Transform, string, Transform) IPipe
 	Flush()
 }
@@ -37,6 +38,7 @@ func NewPipe() IPipe {
 	}
 	return &p
 }
+
 func (p *Pipe) Body() interface{} {
 	in := p.pipes.Top().(Message)
 	for msg := range in {
@@ -70,7 +72,7 @@ func (p *Pipe) SetHeader(k, v string) IPipe {
 	go func() {
 		for msg := range in {
 			m := msg.(*ExchangeMessage)
-			m.SetHead(k, v)
+			m.SetHeader(k, v)
 			out <- m
 		}
 		close(out)
@@ -161,15 +163,22 @@ type ExchangeMessage struct {
 	body interface{}
 }
 
-func (e *ExchangeMessage) SetHead(k, v string) {
+func (e *ExchangeMessage) SetHeader(k, v string) {
 	e.head.Add(k, v)
 }
-func (e *ExchangeMessage) GetHead(k string) string {
+func (e *ExchangeMessage) GetHeader(k string) string {
 	return e.head.Get(k)
 }
 
-func (e *ExchangeMessage) DelHead(k string) {
+func (e *ExchangeMessage) DelHeader(k string) {
 	e.head.Del(k)
+}
+
+func (e *ExchangeMessage) ClearHeader() {
+	keys := e.head.ListKeys()
+	for _, k := range keys {
+		e.head.Del(k)
+	}
 }
 
 func (e *ExchangeMessage) SetBody(b interface{}) {

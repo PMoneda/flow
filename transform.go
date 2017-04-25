@@ -87,7 +87,6 @@ func walkTree(elem *etree.Element, path string, translator map[string]string) {
 }
 
 func walkTreeJSON(ch map[string]*gabs.Container, path *string, values map[string]string) {
-
 	for k, v := range ch {
 		var old string
 		if *path == "" {
@@ -96,15 +95,13 @@ func walkTreeJSON(ch map[string]*gabs.Container, path *string, values map[string
 			old = *path
 			*path = *path + "." + k
 		}
-
 		chd, err := v.ChildrenMap()
 		if err == nil {
 			walkTreeJSON(chd, path, values)
-			*path = ""
 		} else {
 			values[*path] = v.String()
-			*path = old
 		}
+		*path = old
 
 	}
 }
