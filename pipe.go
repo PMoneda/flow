@@ -23,9 +23,10 @@ type IPipe interface {
 	SetBody(interface{}) IPipe
 	Processor(PipeProcessor) IPipe
 	Body() interface{}
-
+	Header() HeaderMap
 	Transform(Transform, string, Transform) IPipe
 	Flush()
+	Choice() *Choice
 }
 
 type Pipe struct {
@@ -39,19 +40,54 @@ func NewPipe() IPipe {
 	return &p
 }
 
+func (p *Pipe) Choice() *Choice {
+	out := make(Message)
+	in := p.pipes.Pop().(Message)
+	p.pipes.Push(out)
+	input := <-in
+	go func() {
+		out <- input
+	}()
+	return NewChoice(p)
+}
+
 func (p *Pipe) Body() interface{} {
-	in := p.pipes.Top().(Message)
+	out := make(Message)
+	in := p.pipes.Pop().(Message)
+	p.pipes.Push(out)
+	var body interface{}
 	for msg := range in {
 		m := msg.(*ExchangeMessage)
-		return m.body
+		body = m.body
+		go func() {
+			out <- m
+			close(out)
+		}()
 	}
-	return nil
+	return body
+}
+
+func (p *Pipe) Header() HeaderMap {
+	out := make(Message)
+	in := p.pipes.Pop().(Message)
+	p.pipes.Push(out)
+	var h HeaderMap
+	for msg := range in {
+		m := msg.(*ExchangeMessage)
+		h = m.head
+		go (func(ms *ExchangeMessage) {
+			out <- ms
+			close(out)
+		})(m)
+		break
+	}
+	return h
 }
 
 //Processor on message
 func (p *Pipe) Processor(proc PipeProcessor) IPipe {
 	out := make(Message)
-	in := p.pipes.Top().(Message)
+	in := p.pipes.Pop().(Message)
 	p.pipes.Push(out)
 	go func() {
 		for msg := range in {
@@ -67,7 +103,7 @@ func (p *Pipe) Processor(proc PipeProcessor) IPipe {
 //SetHeader on message
 func (p *Pipe) SetHeader(k, v string) IPipe {
 	out := make(Message)
-	in := p.pipes.Top().(Message)
+	in := p.pipes.Pop().(Message)
 	p.pipes.Push(out)
 	go func() {
 		for msg := range in {
@@ -83,7 +119,7 @@ func (p *Pipe) SetHeader(k, v string) IPipe {
 //SetBody on message
 func (p *Pipe) SetBody(b interface{}) IPipe {
 	out := make(Message)
-	in := p.pipes.Top().(Message)
+	in := p.pipes.Pop().(Message)
 	p.pipes.Push(out)
 	go func() {
 		for msg := range in {
@@ -114,7 +150,7 @@ func (p *Pipe) From(url string, params ...interface{}) IPipe {
 
 func (p *Pipe) Transform(from Transform, mode string, to Transform) IPipe {
 	out := make(Message)
-	in := p.pipes.Top().(Message)
+	in := p.pipes.Pop().(Message)
 	p.pipes.Push(out)
 	go func() {
 		for msg := range in {
@@ -135,18 +171,16 @@ func (p *Pipe) Transform(from Transform, mode string, to Transform) IPipe {
 }
 
 func (p *Pipe) To(url string, params ...interface{}) IPipe {
+
 	out := make(Message)
-	in := p.pipes.Top().(Message)
+	in := p.pipes.Pop().(Message)
 	p.pipes.Push(out)
 	go func() {
 		u, _ := processURI(url)
 		for n := range in {
 			msg := n.(*ExchangeMessage)
-			pipeConectors[u.protocol](func() {
-				close(out)
-			}, msg, out, u, params...)
+			pipeConectors[u.protocol](func() {}, msg, out, u, params...)
 		}
-
 	}()
 	return p
 }
@@ -159,7 +193,7 @@ func (p *Pipe) Flush() {
 }
 
 type ExchangeMessage struct {
-	head Header
+	head HeaderMap
 	body interface{}
 }
 
@@ -190,7 +224,7 @@ func (e *ExchangeMessage) GetBody() interface{} {
 
 func NewExchangeMessage() *ExchangeMessage {
 	e := ExchangeMessage{
-		head: make(Header),
+		head: make(HeaderMap),
 	}
 	return &e
 }

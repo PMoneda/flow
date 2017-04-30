@@ -30,6 +30,7 @@ var pipeConectors = map[string]func(func(), *ExchangeMessage, Message, uri, ...i
 	"https":  httpConector,
 	"direct": directConector,
 	"msg":    msg,
+	"print":  printConector,
 }
 
 //RegisterConector register a new conector to use as From("my-connector://...")
