@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func msg(next func(), e *ExchangeMessage, out Message, u uri, params ...interface{}) error {
+func msg(next func(), e *ExchangeMessage, out Message, u Uri, params ...interface{}) error {
 	if len(params) == 0 {
 		panic("Message Letter required")
 	}

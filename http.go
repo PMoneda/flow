@@ -25,7 +25,8 @@ func getClient(skip string) *http.Client {
 	}
 	return client
 }
-func httpConector(next func(), e *ExchangeMessage, out Message, u uri, params ...interface{}) error {
+func httpConector(next func(), e *ExchangeMessage, out Message, u Uri, params ...interface{}) error {
+	newData := NewExchangeMessage()
 	var skip string
 	var opts map[string]string
 	method := "GET"
@@ -57,6 +58,8 @@ func httpConector(next func(), e *ExchangeMessage, out Message, u uri, params ..
 	}
 	req, err = http.NewRequest(method, u.raw, body)
 	if err != nil {
+		newData.SetBody(err)
+		out <- newData
 		return err
 	}
 	if authMethod == "basic" {
@@ -69,14 +72,18 @@ func httpConector(next func(), e *ExchangeMessage, out Message, u uri, params ..
 	}
 	resp, errResp := client.Do(req)
 	if errResp != nil {
+		newData.SetBody(errResp)
+		out <- newData
 		return errResp
 	}
 	defer resp.Body.Close()
 	data, errResponse := ioutil.ReadAll(resp.Body)
 	if errResponse != nil {
+		newData.SetBody(errResponse)
+		out <- newData
 		return errResponse
 	}
-	newData := NewExchangeMessage()
+
 	for k := range resp.Header {
 		newData.SetHeader(k, resp.Header.Get(k))
 	}
