@@ -9,6 +9,25 @@ import (
 	"github.com/beevik/etree"
 )
 
+func transformConector(next func(), m *ExchangeMessage, out Message, u Uri, params ...interface{}) error {
+	t := Transform(m.body.(string))
+	var trans string
+	if params[2] != nil {
+		fncs := params[2].(template.FuncMap)
+		for k, v := range fncs {
+			funcMap[k] = v
+		}
+	}
+	if "json" == u.options.Get("format") {
+		trans = string(t.TransformFromJSON(params[0].(Transform), params[1].(Transform)))
+	} else {
+		trans = string(t.TransformFromXML(params[0].(Transform), params[1].(Transform)))
+	}
+	m.body = trans
+	out <- m
+	return nil
+}
+
 //TransformFromXML data from A to B
 func (original Transform) TransformFromXML(from, to Transform) string {
 	doc := etree.NewDocument()
@@ -72,6 +91,7 @@ func getTranslator(from string) map[string]string {
 }
 
 func walkTree(elem *etree.Element, path string, translator map[string]string) {
+	old := path
 	if len(elem.ChildElements()) == 0 {
 		if strings.HasPrefix(elem.Text(), "{{") {
 			_translateTo := strings.Replace(elem.Text(), "{{", "", -1)
@@ -83,6 +103,8 @@ func walkTree(elem *etree.Element, path string, translator map[string]string) {
 	for _, node := range elem.ChildElements() {
 		path = path + "/" + node.Tag
 		walkTree(node, path, translator)
+		path = old
+
 	}
 }
 

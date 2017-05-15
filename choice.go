@@ -28,6 +28,9 @@ func (c *Choice) When(e HeaderFnc) *Choice {
 	return c
 }
 
-func (c *Choice) Otherwise() IPipe {
-	return c.pipe
+func (c *Choice) Otherwise() *Choice {
+	if c.execute {
+		c.execute = true
+	}
+	return c
 }

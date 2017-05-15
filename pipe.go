@@ -23,6 +23,8 @@ type IPipe interface {
 	SetBody(interface{}) IPipe
 	Processor(PipeProcessor) IPipe
 	Body() interface{}
+	GetBody() interface{}
+	GetHeader() HeaderMap
 	Header() HeaderMap
 	Transform(Transform, string, Transform) IPipe
 	Flush()
@@ -50,7 +52,23 @@ func (p *Pipe) Choice() *Choice {
 	}()
 	return NewChoice(p)
 }
+func (p *Pipe) GetBody() interface{} {
+	in := p.pipes.Top().(Message)
+	for msg := range in {
+		m := msg.(*ExchangeMessage)
+		return m.body
+	}
+	return nil
+}
 
+func (p *Pipe) GetHeader() HeaderMap {
+	in := p.pipes.Top().(Message)
+	for msg := range in {
+		m := msg.(*ExchangeMessage)
+		return m.head
+	}
+	return nil
+}
 func (p *Pipe) Body() interface{} {
 	out := make(Message)
 	in := p.pipes.Pop().(Message)

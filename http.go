@@ -3,6 +3,7 @@ package gonnie
 import (
 	"crypto/tls"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -87,6 +88,7 @@ func httpConector(next func(), e *ExchangeMessage, out Message, u Uri, params ..
 	for k := range resp.Header {
 		newData.SetHeader(k, resp.Header.Get(k))
 	}
+	newData.SetHeader("status", fmt.Sprintf("%d", resp.StatusCode))
 	newData.SetBody(string(data))
 	out <- newData
 	next()

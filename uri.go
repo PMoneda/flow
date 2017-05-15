@@ -26,11 +26,12 @@ func processURI(u string) (Uri, error) {
 
 var _lockConectors sync.Mutex
 var pipeConectors = map[string]func(func(), *ExchangeMessage, Message, Uri, ...interface{}) error{
-	"http":   httpConector,
-	"https":  httpConector,
-	"direct": directConector,
-	"msg":    msg,
-	"print":  printConector,
+	"http":      httpConector,
+	"https":     httpConector,
+	"direct":    directConector,
+	"msg":       msg,
+	"print":     printConector,
+	"transform": transformConector,
 }
 
 //RegisterConector register a new conector to use as From("my-connector://...")
