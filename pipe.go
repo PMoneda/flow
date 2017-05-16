@@ -197,6 +197,7 @@ func (p *Pipe) To(url string, params ...interface{}) IPipe {
 		u, _ := processURI(url)
 		for n := range in {
 			msg := n.(*ExchangeMessage)
+			fmt.Println(u.protocol)
 			pipeConectors[u.protocol](func() {}, msg, out, u, params...)
 		}
 	}()

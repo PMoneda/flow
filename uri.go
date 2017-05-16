@@ -32,6 +32,8 @@ var pipeConectors = map[string]func(func(), *ExchangeMessage, Message, Uri, ...i
 	"msg":       msg,
 	"print":     printConector,
 	"transform": transformConector,
+	"template":  templateConector,
+	"set":       setConector,
 }
 
 //RegisterConector register a new conector to use as From("my-connector://...")
