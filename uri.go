@@ -1,14 +1,32 @@
 package gonnie
 
-import "net/url"
-
-import "sync"
+import (
+	"net/url"
+	"sync"
+)
 
 type Uri struct {
 	protocol string
 	host     string
 	options  url.Values
 	raw      string
+}
+
+//GetOption from URI
+func (u Uri) GetOption(k string) string {
+	return u.options.Get(k)
+}
+
+func (u Uri) GetProtocol() string {
+	return u.protocol
+}
+
+func (u Uri) GetHost() string {
+	return u.host
+}
+
+func (u Uri) GetRaw() string {
+	return u.raw
 }
 
 func processURI(u string) (Uri, error) {
@@ -29,11 +47,11 @@ var pipeConectors = map[string]func(func(), *ExchangeMessage, Message, Uri, ...i
 	"http":      httpConector,
 	"https":     httpConector,
 	"direct":    directConector,
-	"msg":       msg,
 	"print":     printConector,
 	"transform": transformConector,
 	"template":  templateConector,
 	"set":       setConector,
+	"message":   messageConector,
 }
 
 //RegisterConector register a new conector to use as From("my-connector://...")

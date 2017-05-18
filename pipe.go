@@ -226,6 +226,10 @@ func (e *ExchangeMessage) DelHeader(k string) {
 	e.head.Del(k)
 }
 
+func (e *ExchangeMessage) GetHeaderMap() HeaderMap {
+	return e.head
+}
+
 func (e *ExchangeMessage) ClearHeader() {
 	keys := e.head.ListKeys()
 	for _, k := range keys {
