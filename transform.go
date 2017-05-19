@@ -12,20 +12,30 @@ import (
 func transformConector(next func(), m *ExchangeMessage, out Message, u Uri, params ...interface{}) error {
 	t := Transform(m.body.(string))
 	var trans string
-	if params[2] != nil {
+	if len(params) > 2 && params[2] != nil {
 		fncs := params[2].(template.FuncMap)
 		for k, v := range fncs {
 			funcMap[k] = v
 		}
 	}
 	if "json" == u.options.Get("format") {
-		trans = string(t.TransformFromJSON(params[0].(Transform), params[1].(Transform)))
+		trans = string(t.TransformFromJSON(convertToTransform(params[0]), convertToTransform(params[1])))
 	} else {
-		trans = string(t.TransformFromXML(params[0].(Transform), params[1].(Transform)))
+		trans = string(t.TransformFromXML(convertToTransform(params[0]), convertToTransform(params[1])))
 	}
 	m.body = trans
 	out <- m
 	return nil
+}
+
+func convertToTransform(s interface{}) Transform {
+	switch p := s.(type) {
+	case string:
+		return Transform(p)
+	case Transform:
+		return p
+	}
+	return ""
 }
 
 //TransformFromXML data from A to B

@@ -34,14 +34,14 @@ func messageConector(next func(), e *ExchangeMessage, out Message, u Uri, params
 	line, _, err := buf.ReadLine()
 	buff := bytes.Buffer{}
 	for err == nil {
-		str := string(line)
+		str := strings.TrimSpace(string(line))
 		if strings.HasPrefix(str, "##") {
 			str = strings.Replace(str, "##", "", 1)
 			err := setHeaders(e, str)
 			if err != nil {
 				return err
 			}
-		} else {
+		} else if str != "" {
 			buff.Write(line)
 			buff.WriteString("\n")
 		}
