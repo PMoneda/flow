@@ -17,6 +17,9 @@ func NewChoice(p IPipe) *Choice {
 }
 
 func (c *Choice) To(url string, params ...interface{}) *Choice {
+	if len(c.pipe.GetFails()) > 0 {
+		return c
+	}
 	if c.execute {
 		c.pipe = c.pipe.To(url, params...)
 		c.executed = true
@@ -25,6 +28,9 @@ func (c *Choice) To(url string, params ...interface{}) *Choice {
 }
 
 func (c *Choice) When(e HeaderFnc) *Choice {
+	if len(c.pipe.GetFails()) > 0 {
+		return c
+	}
 	obj, _ := e(c.pipe)
 	c.execute = false
 	c.execute = obj.(bool)
@@ -32,6 +38,9 @@ func (c *Choice) When(e HeaderFnc) *Choice {
 }
 
 func (c *Choice) Otherwise() *Choice {
+	if len(c.pipe.GetFails()) > 0 {
+		return c
+	}
 	c.execute = false
 	if !c.executed {
 		c.execute = true

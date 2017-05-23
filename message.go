@@ -26,6 +26,7 @@ func messageConector(next func(), e *ExchangeMessage, out Message, u Uri, params
 		body = e.body
 	}
 	parsed, errTmpl := parseTemplate(body, tmpl, fncs)
+
 	if errTmpl != nil {
 		return errTmpl
 	}
@@ -47,6 +48,7 @@ func messageConector(next func(), e *ExchangeMessage, out Message, u Uri, params
 		}
 		line, _, err = buf.ReadLine()
 	}
+
 	e.SetBody(buff.String())
 	out <- e
 	next()

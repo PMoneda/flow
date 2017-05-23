@@ -24,6 +24,7 @@ type IPipe interface {
 	Processor(PipeProcessor) IPipe
 	Body() interface{}
 	GetBody() interface{}
+	GetFails() []error
 	GetHeader() HeaderMap
 	Header() HeaderMap
 	Transform(Transform, string, Transform) IPipe
@@ -33,16 +34,22 @@ type IPipe interface {
 
 type Pipe struct {
 	pipes Stack
+	fails []error
 }
 
 func NewPipe() IPipe {
 	p := Pipe{
 		pipes: make(Stack, 0, 0),
+		fails: make([]error, 0, 0),
 	}
 	return &p
 }
 
 func (p *Pipe) Choice() *Choice {
+	if len(p.fails) > 0 {
+		printFails(p)
+		return NewChoice(p)
+	}
 	out := make(Message)
 	in := p.pipes.Pop().(Message)
 	p.pipes.Push(out)
@@ -53,6 +60,10 @@ func (p *Pipe) Choice() *Choice {
 	return NewChoice(p)
 }
 func (p *Pipe) GetBody() interface{} {
+	if len(p.fails) > 0 {
+		printFails(p)
+		return p.fails
+	}
 	in := p.pipes.Top().(Message)
 	for msg := range in {
 		m := msg.(*ExchangeMessage)
@@ -70,6 +81,10 @@ func (p *Pipe) GetHeader() HeaderMap {
 	return nil
 }
 func (p *Pipe) Body() interface{} {
+	if len(p.fails) > 0 {
+		printFails(p)
+		return p.fails
+	}
 	out := make(Message)
 	in := p.pipes.Pop().(Message)
 	p.pipes.Push(out)
@@ -86,6 +101,7 @@ func (p *Pipe) Body() interface{} {
 }
 
 func (p *Pipe) Header() HeaderMap {
+
 	out := make(Message)
 	in := p.pipes.Pop().(Message)
 	p.pipes.Push(out)
@@ -104,6 +120,10 @@ func (p *Pipe) Header() HeaderMap {
 
 //Processor on message
 func (p *Pipe) Processor(proc PipeProcessor) IPipe {
+	if len(p.fails) > 0 {
+		printFails(p)
+		return p
+	}
 	out := make(Message)
 	in := p.pipes.Pop().(Message)
 	p.pipes.Push(out)
@@ -120,6 +140,10 @@ func (p *Pipe) Processor(proc PipeProcessor) IPipe {
 
 //SetHeader on message
 func (p *Pipe) SetHeader(k, v string) IPipe {
+	if len(p.fails) > 0 {
+		printFails(p)
+		return p
+	}
 	out := make(Message)
 	in := p.pipes.Pop().(Message)
 	p.pipes.Push(out)
@@ -136,6 +160,10 @@ func (p *Pipe) SetHeader(k, v string) IPipe {
 
 //SetBody on message
 func (p *Pipe) SetBody(b interface{}) IPipe {
+	if len(p.fails) > 0 {
+		printFails(p)
+		return p
+	}
 	out := make(Message)
 	in := p.pipes.Pop().(Message)
 	p.pipes.Push(out)
@@ -151,6 +179,10 @@ func (p *Pipe) SetBody(b interface{}) IPipe {
 }
 
 func (p *Pipe) From(url string, params ...interface{}) IPipe {
+	if len(p.fails) > 0 {
+		printFails(p)
+		return p
+	}
 	out := make(Message)
 	p.pipes.Push(out)
 	go func() {
@@ -167,6 +199,10 @@ func (p *Pipe) From(url string, params ...interface{}) IPipe {
 }
 
 func (p *Pipe) Transform(from Transform, mode string, to Transform) IPipe {
+	if len(p.fails) > 0 {
+		printFails(p)
+		return p
+	}
 	out := make(Message)
 	in := p.pipes.Pop().(Message)
 	p.pipes.Push(out)
@@ -175,11 +211,17 @@ func (p *Pipe) Transform(from Transform, mode string, to Transform) IPipe {
 			m := msg.(*ExchangeMessage)
 			t := Transform(m.body.(string))
 			var trans string
+			var s string
+			var err error
 			if "json" == mode {
-				trans = string(t.TransformFromJSON(from, to))
+				s, err = t.TransformFromJSON(from, to)
 			} else {
-				trans = string(t.TransformFromXML(from, to))
+				s, err = t.TransformFromXML(from, to)
 			}
+			if err != nil {
+				p.fails = append(p.fails, err)
+			}
+			trans = string(s)
 			m.body = trans
 			out <- m
 		}
@@ -189,20 +231,41 @@ func (p *Pipe) Transform(from Transform, mode string, to Transform) IPipe {
 }
 
 func (p *Pipe) To(url string, params ...interface{}) IPipe {
-
+	if len(p.fails) > 0 {
+		printFails(p)
+		return p
+	}
 	out := make(Message)
 	in := p.pipes.Pop().(Message)
 	p.pipes.Push(out)
 	go func() {
-		u, _ := processURI(url)
+		u, errURI := processURI(url)
+		if errURI != nil {
+			p.fails = append(p.fails, errURI)
+			close(out)
+			return
+		}
 		for n := range in {
 			msg := n.(*ExchangeMessage)
-			pipeConectors[u.protocol](func() {}, msg, out, u, params...)
+			err := pipeConectors[u.protocol](func() {}, msg, out, u, params...)
+			if err != nil {
+				fmt.Printf("Erro: %s\nURI:%s\n", err, url)
+				p.fails = append(p.fails, err)
+				close(out)
+				break
+			}
 		}
 	}()
 	return p
 }
-
+func printFails(p *Pipe) {
+	for _, e := range p.fails {
+		fmt.Println(e)
+	}
+}
+func (p *Pipe) GetFails() []error {
+	return p.fails
+}
 func (p *Pipe) Flush() {
 	for v := range p.pipes.Top().(Message) {
 		fmt.Println(v)

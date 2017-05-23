@@ -12,6 +12,8 @@ import (
 func transformConector(next func(), m *ExchangeMessage, out Message, u Uri, params ...interface{}) error {
 	t := Transform(m.body.(string))
 	var trans string
+	var s string
+	var errFmt error
 	if len(params) > 2 && params[2] != nil {
 		fncs := params[2].(template.FuncMap)
 		for k, v := range fncs {
@@ -19,10 +21,14 @@ func transformConector(next func(), m *ExchangeMessage, out Message, u Uri, para
 		}
 	}
 	if "json" == u.options.Get("format") {
-		trans = string(t.TransformFromJSON(convertToTransform(params[0]), convertToTransform(params[1])))
+		s, errFmt = t.TransformFromJSON(convertToTransform(params[0]), convertToTransform(params[1]))
 	} else {
-		trans = string(t.TransformFromXML(convertToTransform(params[0]), convertToTransform(params[1])))
+		s, errFmt = t.TransformFromXML(convertToTransform(params[0]), convertToTransform(params[1]))
 	}
+	if errFmt != nil {
+		return errFmt
+	}
+	trans = string(s)
 	m.body = trans
 	out <- m
 	return nil
@@ -39,7 +45,7 @@ func convertToTransform(s interface{}) Transform {
 }
 
 //TransformFromXML data from A to B
-func (original Transform) TransformFromXML(from, to Transform) string {
+func (original Transform) TransformFromXML(from, to Transform) (string, error) {
 	doc := etree.NewDocument()
 	if err := doc.ReadFromString(string(original)); err != nil {
 		panic(err)
@@ -50,7 +56,7 @@ func (original Transform) TransformFromXML(from, to Transform) string {
 }
 
 //TransformFromJSON data from A to B
-func (original Transform) TransformFromJSON(from, to Transform) string {
+func (original Transform) TransformFromJSON(from, to Transform) (string, error) {
 	jsonParsed, _ := gabs.ParseJSON([]byte(from))
 	ch, _ := jsonParsed.ChildrenMap()
 	path := ""
@@ -70,14 +76,14 @@ func cleanString(s string) string {
 	s1 = strings.Replace(s1, "&#34;", "", -1)
 	return s1
 }
-func generateTransformedMessage(values map[string]string, to Transform) string {
+func generateTransformedMessage(values map[string]string, to Transform) (string, error) {
 	buf := bytes.NewBuffer(nil)
 	t := template.Must(template.New("transform").Funcs(funcMap).Parse(string(to)))
 	err := t.ExecuteTemplate(buf, "transform", values)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
-	return buf.String()
+	return buf.String(), nil
 }
 func createMapValues(translator map[string]string, doc *etree.Document) map[string]string {
 	values := make(map[string]string)
