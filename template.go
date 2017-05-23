@@ -19,13 +19,17 @@ func templateConector(next func(), m *ExchangeMessage, out Message, u Uri, param
 	return nil
 }
 
-func parseTemplate(obj interface{}, tmpl string, fncs template.FuncMap) (string, error) {
+func parseTemplate(obj interface{}, _tmpl string, fncs template.FuncMap) (string, error) {
 	buf := bytes.NewBuffer(nil)
-	for k, v := range fncs {
-		funcMap[k] = v
+	hash := sha(_tmpl)
+	t, ok := tmpl[hash]
+	if !ok {
+		ltmpl.Lock()
+		t = template.Must(template.New(hash).Funcs(fncs).Parse(_tmpl))
+		tmpl[hash] = t
+		ltmpl.Unlock()
 	}
-	t := template.Must(template.New("transform").Funcs(funcMap).Parse(tmpl))
-	err := t.ExecuteTemplate(buf, "transform", obj)
+	err := t.ExecuteTemplate(buf, hash, obj)
 	if err != nil {
 		return "", err
 	}

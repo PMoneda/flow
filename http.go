@@ -6,13 +6,29 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net"
 	"net/http"
-	"strconv"
 	"strings"
+	"time"
 )
 
+var defaultDialer = &net.Dialer{Timeout: 16 * time.Second, KeepAlive: 16 * time.Second}
+
+var cfg *tls.Config = &tls.Config{
+	InsecureSkipVerify: true,
+}
+var client *http.Client = &http.Client{
+	Transport: &http.Transport{
+		TLSClientConfig:     cfg,
+		Dial:                defaultDialer.Dial,
+		TLSHandshakeTimeout: 16 * time.Second,
+		DisableCompression:  true,
+		DisableKeepAlives:   true,
+	},
+}
+
 func getClient(skip string) *http.Client {
-	_skip := false
+	/*_skip := false
 	if skip != "" {
 		_skip, _ = strconv.ParseBool(skip)
 	}
@@ -23,10 +39,11 @@ func getClient(skip string) *http.Client {
 		Transport: &http.Transport{
 			TLSClientConfig: cfg,
 		},
-	}
+	}*/
 	return client
 }
 func httpConector(next func(), e *ExchangeMessage, out Message, u Uri, params ...interface{}) error {
+
 	newData := NewExchangeMessage()
 	var skip string
 	var opts map[string]string
@@ -58,11 +75,14 @@ func httpConector(next func(), e *ExchangeMessage, out Message, u Uri, params ..
 		}
 	}
 	req, err = http.NewRequest(method, u.raw, body)
+
 	if err != nil {
 		newData.SetBody(err)
 		out <- newData
+		next()
 		return err
 	}
+
 	if authMethod == "basic" {
 		req.SetBasicAuth(username, password)
 	}
@@ -71,10 +91,12 @@ func httpConector(next func(), e *ExchangeMessage, out Message, u Uri, params ..
 	for _, key := range keys {
 		req.Header.Add(key, header.Get(key))
 	}
+	req.Close = true
 	resp, errResp := client.Do(req)
 	if errResp != nil {
 		newData.SetBody(errResp)
 		out <- newData
+		next()
 		return errResp
 	}
 	defer resp.Body.Close()
@@ -82,6 +104,7 @@ func httpConector(next func(), e *ExchangeMessage, out Message, u Uri, params ..
 	if errResponse != nil {
 		newData.SetBody(errResponse)
 		out <- newData
+		next()
 		return errResponse
 	}
 

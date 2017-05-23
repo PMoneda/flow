@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"html/template"
+	"os"
 )
 
 //Transform date from template to other
@@ -27,7 +29,7 @@ type IPipe interface {
 	GetFails() []error
 	GetHeader() HeaderMap
 	Header() HeaderMap
-	Transform(Transform, string, Transform) IPipe
+	Transform(Transform, string, Transform, template.FuncMap) IPipe
 	Flush()
 	Choice() *Choice
 }
@@ -60,20 +62,27 @@ func (p *Pipe) Choice() *Choice {
 	return NewChoice(p)
 }
 func (p *Pipe) GetBody() interface{} {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Recovered in f", r)
+			os.Exit(-30)
+		}
+	}()
 	if len(p.fails) > 0 {
 		printFails(p)
 		return p.fails
 	}
-	in := p.pipes.Top().(Message)
+	in := p.pipes.Pop().(Message)
 	for msg := range in {
 		m := msg.(*ExchangeMessage)
+		close(in)
 		return m.body
 	}
 	return nil
 }
 
 func (p *Pipe) GetHeader() HeaderMap {
-	in := p.pipes.Top().(Message)
+	in := p.pipes.Pop().(Message)
 	for msg := range in {
 		m := msg.(*ExchangeMessage)
 		return m.head
@@ -120,6 +129,7 @@ func (p *Pipe) Header() HeaderMap {
 
 //Processor on message
 func (p *Pipe) Processor(proc PipeProcessor) IPipe {
+
 	if len(p.fails) > 0 {
 		printFails(p)
 		return p
@@ -140,6 +150,7 @@ func (p *Pipe) Processor(proc PipeProcessor) IPipe {
 
 //SetHeader on message
 func (p *Pipe) SetHeader(k, v string) IPipe {
+
 	if len(p.fails) > 0 {
 		printFails(p)
 		return p
@@ -160,6 +171,7 @@ func (p *Pipe) SetHeader(k, v string) IPipe {
 
 //SetBody on message
 func (p *Pipe) SetBody(b interface{}) IPipe {
+
 	if len(p.fails) > 0 {
 		printFails(p)
 		return p
@@ -168,6 +180,7 @@ func (p *Pipe) SetBody(b interface{}) IPipe {
 	in := p.pipes.Pop().(Message)
 	p.pipes.Push(out)
 	go func() {
+
 		for msg := range in {
 			m := msg.(*ExchangeMessage)
 			m.SetBody(b)
@@ -188,7 +201,8 @@ func (p *Pipe) From(url string, params ...interface{}) IPipe {
 	go func() {
 		u, err := processURI(url)
 		if err != nil {
-			panic(err)
+			close(out)
+			return
 		}
 		pipeConectors[u.protocol](func() {
 			close(out)
@@ -198,7 +212,7 @@ func (p *Pipe) From(url string, params ...interface{}) IPipe {
 	return p
 }
 
-func (p *Pipe) Transform(from Transform, mode string, to Transform) IPipe {
+func (p *Pipe) Transform(from Transform, mode string, to Transform, fncs template.FuncMap) IPipe {
 	if len(p.fails) > 0 {
 		printFails(p)
 		return p
@@ -214,9 +228,9 @@ func (p *Pipe) Transform(from Transform, mode string, to Transform) IPipe {
 			var s string
 			var err error
 			if "json" == mode {
-				s, err = t.TransformFromJSON(from, to)
+				s, err = t.TransformFromJSON(from, to, fncs)
 			} else {
-				s, err = t.TransformFromXML(from, to)
+				s, err = t.TransformFromXML(from, to, fncs)
 			}
 			if err != nil {
 				p.fails = append(p.fails, err)
@@ -252,10 +266,12 @@ func (p *Pipe) To(url string, params ...interface{}) IPipe {
 				fmt.Printf("Erro: %s\nURI:%s\n", err, url)
 				p.fails = append(p.fails, err)
 				close(out)
-				break
+				return
 			}
 		}
+
 	}()
+
 	return p
 }
 func printFails(p *Pipe) {
