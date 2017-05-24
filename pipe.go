@@ -5,7 +5,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"html/template"
-	"os"
 )
 
 //Transform date from template to other
@@ -65,7 +64,6 @@ func (p *Pipe) GetBody() interface{} {
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Println("Recovered in f", r)
-			os.Exit(-30)
 		}
 	}()
 	if len(p.fails) > 0 {
@@ -105,6 +103,7 @@ func (p *Pipe) Body() interface{} {
 			out <- m
 			close(out)
 		}()
+
 	}
 	return body
 }
@@ -270,7 +269,6 @@ func (p *Pipe) To(url string, params ...interface{}) IPipe {
 			}
 			return
 		}
-
 	}()
 
 	return p

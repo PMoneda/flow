@@ -94,16 +94,12 @@ func httpConector(next func(), e *ExchangeMessage, out Message, u Uri, params ..
 	req.Close = true
 	resp, errResp := client.Do(req)
 	if errResp != nil {
-		newData.SetBody(errResp)
-		out <- newData
 		next()
 		return errResp
 	}
 	defer resp.Body.Close()
 	data, errResponse := ioutil.ReadAll(resp.Body)
 	if errResponse != nil {
-		newData.SetBody(errResponse)
-		out <- newData
 		next()
 		return errResponse
 	}
