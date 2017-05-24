@@ -268,6 +268,7 @@ func (p *Pipe) To(url string, params ...interface{}) IPipe {
 				close(out)
 				return
 			}
+			return
 		}
 
 	}()
