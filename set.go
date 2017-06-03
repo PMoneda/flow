@@ -1,4 +1,4 @@
-package gonnie
+package flow
 
 func setConector(next func(), e *ExchangeMessage, out Message, u Uri, params ...interface{}) error {
 	if len(params) > 0 {

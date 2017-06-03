@@ -1,4 +1,4 @@
-package gonnie
+package flow
 
 import "errors"
 

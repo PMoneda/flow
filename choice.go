@@ -1,4 +1,4 @@
-package gonnie
+package flow
 
 type Choice struct {
 	pipe     IPipe

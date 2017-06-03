@@ -1,4 +1,4 @@
-package gonnie
+package flow
 
 //HeaderMap represent a key-value header pattern
 type HeaderMap map[string]string

@@ -1,4 +1,4 @@
-package gonnie
+package flow
 
 // Stack for message channel
 type Stack []interface{}
