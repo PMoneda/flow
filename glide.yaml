@@ -1,0 +1,6 @@
+package: github.com/PMoneda/flow
+import:
+- package: github.com/Jeffail/gabs
+  version: ~1.0.0
+- package: github.com/beevik/etree
+  version: ~0.0.0
