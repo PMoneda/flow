@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func messageConector(next func(), e *ExchangeMessage, out Message, u URI, params ...interface{}) error {
+func messageConnector(next func(), e *ExchangeMessage, out Message, u URI, params ...interface{}) error {
 
 	if len(params) < 2 {
 		return errors.New("Message Letter required")

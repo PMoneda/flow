@@ -1,6 +1,6 @@
 package flow
 
-func setConector(next func(), e *ExchangeMessage, out Message, u URI, params ...interface{}) error {
+func setConnector(next func(), e *ExchangeMessage, out Message, u URI, params ...interface{}) error {
 	if len(params) > 0 {
 		if u.options.Get("prop") == "body" {
 			e.SetBody(params[0])

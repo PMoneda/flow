@@ -212,7 +212,7 @@ func (p *Pipe) From(url string, params ...interface{}) IPipe {
 			close(out)
 			return
 		}
-		pipeConectors[u.protocol](func() {
+		pipeConnectors[u.protocol](func() {
 			close(out)
 		}, NewExchangeMessage(), out, u, params...)
 	}()
@@ -271,7 +271,7 @@ func (p *Pipe) To(url string, params ...interface{}) IPipe {
 		}
 		for n := range in {
 			msg := n.(*ExchangeMessage)
-			err := pipeConectors[u.protocol](func() {}, msg, out, u, params...)
+			err := pipeConnectors[u.protocol](func() {}, msg, out, u, params...)
 			if err != nil {
 				fmt.Printf("Erro: %s\nURI:%s\n", err, url)
 				p.fails = append(p.fails, err)

@@ -2,7 +2,7 @@ package flow
 
 import "errors"
 
-func unmarshallConector(next func(), e *ExchangeMessage, out Message, u URI, params ...interface{}) error {
+func unmarshallConnector(next func(), e *ExchangeMessage, out Message, u URI, params ...interface{}) error {
 	if len(params) < 1 {
 		return errors.New("You should give a objeto to unmarshall to")
 	}

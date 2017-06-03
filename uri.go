@@ -46,22 +46,23 @@ func processURI(u string) (URI, error) {
 	return ur, nil
 }
 
-var _lockConectors sync.Mutex
-var pipeConectors = map[string]func(func(), *ExchangeMessage, Message, URI, ...interface{}) error{
-	"http":       httpConector,
-	"https":      httpConector,
-	"direct":     directConector,
-	"print":      printConector,
-	"transform":  transformConector,
-	"template":   templateConector,
-	"set":        setConector,
-	"message":    messageConector,
-	"unmarshall": unmarshallConector,
+var _lockConnectors sync.Mutex
+var pipeConnectors = map[string]func(func(), *ExchangeMessage, Message, URI, ...interface{}) error{
+	"http":       httpConnector,
+	"https":      httpConnector,
+	"direct":     directConnector,
+	"print":      printConnector,
+	"transform":  transformConnector,
+	"template":   templateConnector,
+	"set":        setConnector,
+	"message":    messageConnector,
+	"unmarshall": unmarshallConnector,
+	"crawler":    crawlerConnector,
 }
 
-//RegisterConector register a new conector to use as From("my-connector://...")
-func RegisterConector(name string, callback func(func(), *ExchangeMessage, Message, URI, ...interface{}) error) {
-	_lockConectors.Lock()
-	defer _lockConectors.Unlock()
-	pipeConectors[name] = callback
+//RegisterConnector register a new Connector to use as From("my-connector://...")
+func RegisterConnector(name string, callback func(func(), *ExchangeMessage, Message, URI, ...interface{}) error) {
+	_lockConnectors.Lock()
+	defer _lockConnectors.Unlock()
+	pipeConnectors[name] = callback
 }

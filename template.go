@@ -5,7 +5,7 @@ import (
 	"html/template"
 )
 
-func templateConector(next func(), m *ExchangeMessage, out Message, u URI, params ...interface{}) error {
+func templateConnector(next func(), m *ExchangeMessage, out Message, u URI, params ...interface{}) error {
 	var fncs template.FuncMap
 	if len(params) > 1 && params[1] != nil {
 		fncs = params[1].(template.FuncMap)

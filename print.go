@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-func printConector(next func(), e *ExchangeMessage, out Message, u URI, params ...interface{}) error {
+func printConnector(next func(), e *ExchangeMessage, out Message, u URI, params ...interface{}) error {
 	msg := u.options.Get("msg")
 	//TODO refactor
 	if msg == "${body}" {
