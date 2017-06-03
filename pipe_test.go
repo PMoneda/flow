@@ -88,7 +88,7 @@ func TestShouldConvertJSONInputMessageToOutPutUsingTransformOnPipe(t *testing.T)
 	`
 
 	r := NewPipe()
-	b := r.From("http://services.groupkt.com/state/get/IND/UP").Transform(from, "json", to).Body()
+	b := r.From("http://services.groupkt.com/state/get/IND/UP").Transform(from, "json", to, nil).Body()
 	if b != expected {
 		t.Fail()
 	}

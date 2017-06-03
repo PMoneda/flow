@@ -4,3 +4,5 @@ import:
   version: ~1.0.0
 - package: github.com/beevik/etree
   version: ~0.0.0
+- package: github.com/smartystreets/goconvey
+  version: ~1.6.2

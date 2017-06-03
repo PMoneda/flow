@@ -5,7 +5,8 @@ import (
 	"sync"
 )
 
-type Uri struct {
+//URI is the pattern of connectors
+type URI struct {
 	protocol string
 	host     string
 	options  url.Values
@@ -13,28 +14,31 @@ type Uri struct {
 }
 
 //GetOption from URI
-func (u Uri) GetOption(k string) string {
+func (u URI) GetOption(k string) string {
 	return u.options.Get(k)
 }
 
-func (u Uri) GetProtocol() string {
+//GetProtocol return connector schema
+func (u URI) GetProtocol() string {
 	return u.protocol
 }
 
-func (u Uri) GetHost() string {
+//GetHost retruns connector host
+func (u URI) GetHost() string {
 	return u.host
 }
 
-func (u Uri) GetRaw() string {
+//GetRaw returns a plain text connector url
+func (u URI) GetRaw() string {
 	return u.raw
 }
 
-func processURI(u string) (Uri, error) {
+func processURI(u string) (URI, error) {
 	url, err := url.Parse(u)
 	if err != nil {
-		return Uri{}, err
+		return URI{}, err
 	}
-	ur := Uri{}
+	ur := URI{}
 	ur.host = url.Host
 	ur.protocol = url.Scheme
 	ur.options = url.Query()
@@ -43,7 +47,7 @@ func processURI(u string) (Uri, error) {
 }
 
 var _lockConectors sync.Mutex
-var pipeConectors = map[string]func(func(), *ExchangeMessage, Message, Uri, ...interface{}) error{
+var pipeConectors = map[string]func(func(), *ExchangeMessage, Message, URI, ...interface{}) error{
 	"http":       httpConector,
 	"https":      httpConector,
 	"direct":     directConector,
@@ -56,7 +60,7 @@ var pipeConectors = map[string]func(func(), *ExchangeMessage, Message, Uri, ...i
 }
 
 //RegisterConector register a new conector to use as From("my-connector://...")
-func RegisterConector(name string, callback func(func(), *ExchangeMessage, Message, Uri, ...interface{}) error) {
+func RegisterConector(name string, callback func(func(), *ExchangeMessage, Message, URI, ...interface{}) error) {
 	_lockConectors.Lock()
 	defer _lockConectors.Unlock()
 	pipeConectors[name] = callback

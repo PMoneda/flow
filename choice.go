@@ -1,5 +1,6 @@
 package flow
 
+//Choice is the type for conditional structure of a Pipe
 type Choice struct {
 	pipe     IPipe
 	execute  bool
@@ -16,6 +17,7 @@ func NewChoice(p IPipe) *Choice {
 	return &c
 }
 
+//To execute a connector
 func (c *Choice) To(url string, params ...interface{}) *Choice {
 	if len(c.pipe.GetFails()) > 0 {
 		return c
@@ -27,6 +29,7 @@ func (c *Choice) To(url string, params ...interface{}) *Choice {
 	return c
 }
 
+// When is the conditional tester
 func (c *Choice) When(e HeaderFnc) *Choice {
 	if len(c.pipe.GetFails()) > 0 {
 		return c
@@ -37,6 +40,7 @@ func (c *Choice) When(e HeaderFnc) *Choice {
 	return c
 }
 
+//Otherwise is executed when others condiotions is not true - Like Else
 func (c *Choice) Otherwise() *Choice {
 	if len(c.pipe.GetFails()) > 0 {
 		return c

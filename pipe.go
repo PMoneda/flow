@@ -29,15 +29,16 @@ type IPipe interface {
 	GetHeader() HeaderMap
 	Header() HeaderMap
 	Transform(Transform, string, Transform, template.FuncMap) IPipe
-	Flush()
 	Choice() *Choice
 }
 
+// Pipe is the main data structure of Flow Pipe controls all the execution flow
 type Pipe struct {
 	pipes Stack
 	fails []error
 }
 
+// NewPipe creates a new empty Pipe
 func NewPipe() IPipe {
 	p := Pipe{
 		pipes: make(Stack, 0, 0),
@@ -46,6 +47,7 @@ func NewPipe() IPipe {
 	return &p
 }
 
+//Choice is the conditional flow of a pipe
 func (p *Pipe) Choice() *Choice {
 	if len(p.fails) > 0 {
 		printFails(p)
@@ -60,7 +62,10 @@ func (p *Pipe) Choice() *Choice {
 	}()
 	return NewChoice(p)
 }
+
+//GetBody get final body result from executed flow
 func (p *Pipe) GetBody() interface{} {
+	in := p.pipes.Pop().(Message)
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Println("Recovered in f", r)
@@ -70,15 +75,15 @@ func (p *Pipe) GetBody() interface{} {
 		printFails(p)
 		return p.fails
 	}
-	in := p.pipes.Pop().(Message)
+
 	for msg := range in {
 		m := msg.(*ExchangeMessage)
-		close(in)
 		return m.body
 	}
 	return nil
 }
 
+//GetHeader same as GetBody but instead of return body of message this method returns the message header
 func (p *Pipe) GetHeader() HeaderMap {
 	in := p.pipes.Pop().(Message)
 	for msg := range in {
@@ -87,6 +92,8 @@ func (p *Pipe) GetHeader() HeaderMap {
 	}
 	return nil
 }
+
+//Body returns body but doesn't lock the flow
 func (p *Pipe) Body() interface{} {
 	if len(p.fails) > 0 {
 		printFails(p)
@@ -108,6 +115,7 @@ func (p *Pipe) Body() interface{} {
 	return body
 }
 
+//Header return current Header but doesn't lock the flow
 func (p *Pipe) Header() HeaderMap {
 
 	out := make(Message)
@@ -126,7 +134,7 @@ func (p *Pipe) Header() HeaderMap {
 	return h
 }
 
-//Processor on message
+//Processor execute a user-pass go function in the flow
 func (p *Pipe) Processor(proc PipeProcessor) IPipe {
 
 	if len(p.fails) > 0 {
@@ -190,6 +198,7 @@ func (p *Pipe) SetBody(b interface{}) IPipe {
 	return p
 }
 
+//From is the entrypoint of a flow, all flows need to be started with From
 func (p *Pipe) From(url string, params ...interface{}) IPipe {
 	if len(p.fails) > 0 {
 		printFails(p)
@@ -211,6 +220,7 @@ func (p *Pipe) From(url string, params ...interface{}) IPipe {
 	return p
 }
 
+//Transform -deprecated
 func (p *Pipe) Transform(from Transform, mode string, to Transform, fncs template.FuncMap) IPipe {
 	if len(p.fails) > 0 {
 		printFails(p)
@@ -243,6 +253,7 @@ func (p *Pipe) Transform(from Transform, mode string, to Transform, fncs templat
 	return p
 }
 
+//To is a method to create a flow based on connectors
 func (p *Pipe) To(url string, params ...interface{}) IPipe {
 	if len(p.fails) > 0 {
 		printFails(p)
@@ -278,36 +289,39 @@ func printFails(p *Pipe) {
 		fmt.Println(e)
 	}
 }
+
+//GetFails returns all error occured dURIng execution flow
 func (p *Pipe) GetFails() []error {
 	return p.fails
 }
-func (p *Pipe) Flush() {
-	for v := range p.pipes.Top().(Message) {
-		fmt.Println(v)
-	}
-	p.pipes.Clear()
-}
 
+//ExchangeMessage is the message exchange inner Pipe
 type ExchangeMessage struct {
 	head HeaderMap
 	body interface{}
 }
 
+//SetHeader add a key-value header to a message
 func (e *ExchangeMessage) SetHeader(k, v string) {
 	e.head.Add(k, v)
 }
+
+//GetHeader returns a header value based on key
 func (e *ExchangeMessage) GetHeader(k string) string {
 	return e.head.Get(k)
 }
 
+//DelHeader delete header from message
 func (e *ExchangeMessage) DelHeader(k string) {
 	e.head.Del(k)
 }
 
+//GetHeaderMap return the map from  header
 func (e *ExchangeMessage) GetHeaderMap() HeaderMap {
 	return e.head
 }
 
+//ClearHeader removes all entries from header
 func (e *ExchangeMessage) ClearHeader() {
 	keys := e.head.ListKeys()
 	for _, k := range keys {
@@ -315,13 +329,17 @@ func (e *ExchangeMessage) ClearHeader() {
 	}
 }
 
+//SetBody writes the body to message
 func (e *ExchangeMessage) SetBody(b interface{}) {
 	e.body = b
 }
+
+//GetBody return body from message
 func (e *ExchangeMessage) GetBody() interface{} {
 	return e.body
 }
 
+//NewExchangeMessage creates new empty ExchangeMessage
 func NewExchangeMessage() *ExchangeMessage {
 	e := ExchangeMessage{
 		head: make(HeaderMap),

@@ -14,10 +14,10 @@ import (
 
 var defaultDialer = &net.Dialer{Timeout: 16 * time.Second, KeepAlive: 16 * time.Second}
 
-var cfg *tls.Config = &tls.Config{
+var cfg = &tls.Config{
 	InsecureSkipVerify: true,
 }
-var client *http.Client = &http.Client{
+var client = &http.Client{
 	Transport: &http.Transport{
 		TLSClientConfig:     cfg,
 		Dial:                defaultDialer.Dial,
@@ -42,7 +42,7 @@ func getClient(skip string) *http.Client {
 	}*/
 	return client
 }
-func httpConector(next func(), e *ExchangeMessage, out Message, u Uri, params ...interface{}) error {
+func httpConector(next func(), e *ExchangeMessage, out Message, u URI, params ...interface{}) error {
 
 	newData := NewExchangeMessage()
 	var skip string
