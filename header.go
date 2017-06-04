@@ -10,7 +10,11 @@ func (h HeaderMap) Add(key, value string) {
 
 //Get entry from map
 func (h HeaderMap) Get(key string) string {
-	return h[key]
+	s, exist := h[key]
+	if !exist {
+		s = ""
+	}
+	return s
 }
 
 //Del entry from map
@@ -43,5 +47,13 @@ func (h HeaderFnc) IsEqualTo(s string) HeaderFnc {
 	return func(pipe IPipe) (interface{}, IPipe) {
 		obj, _ := h(pipe)
 		return obj.(string) == s, pipe
+	}
+}
+
+//Exist returns true if header[key] exist
+func (h HeaderFnc) Exist() HeaderFnc {
+	return func(pipe IPipe) (interface{}, IPipe) {
+		obj, _ := h(pipe)
+		return obj.(string) != "", pipe
 	}
 }

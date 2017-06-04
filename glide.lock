@@ -1,10 +1,27 @@
-hash: c354fb3d587f11e1326504d02c295038559aa8c2e0c3f4020d8e03aeba683ec1
-updated: 2017-06-03T10:39:39.204067279-03:00
+hash: b4fe2012377552eef29fad7a585fa0964bb02d0a8f59657823a0b8dac9a1185c
+updated: 2017-06-03T12:04:28.77457486-03:00
 imports:
 - name: github.com/beevik/etree
   version: abae5fc32af8862e420d52e686a7e6ec14111685
 - name: github.com/Jeffail/gabs
   version: 2a3aa15961d5fee6047b8151b67ac2f08ba2c48c
+- name: github.com/PuerkitoBio/goquery
+  version: e1271ee34c6a305e38566ecd27ae374944907ee9
 - name: github.com/smartystreets/goconvey
   version: d4c757aa9afd1e2fc1832aaab209b5794eb336e1
-testImports: []
+  subpackages:
+  - convey
+  - convey/gotest
+  - convey/reporting
+testImports:
+- name: github.com/gopherjs/gopherjs
+  version: 9659c814f1d54d63f9c623449a7111d3864c1361
+  subpackages:
+  - js
+- name: github.com/jtolds/gls
+  version: 8ddce2a84170772b95dd5d576c48d517b22cac63
+- name: github.com/smartystreets/assertions
+  version: d20dfdd831a09c7eb926e4bd8ae0cbedebff251a
+  subpackages:
+  - internal/go-render/render
+  - internal/oglematchers
