@@ -3,6 +3,7 @@ package flow
 import (
 	"encoding/json"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"html/template"
 )
@@ -354,8 +355,10 @@ func (e *ExchangeMessage) BindJSON(v interface{}) error {
 		return json.Unmarshal([]byte(t), &v)
 	case []byte:
 		return json.Unmarshal(t, &v)
+	case error:
+		return t
 	default:
-		panic("Invalid datatype")
+		return errors.New("Invalid datatype")
 	}
 }
 
