@@ -389,7 +389,9 @@ func (e *ExchangeMessage) BindXML(v interface{}) error {
 		return xml.Unmarshal([]byte(t), &v)
 	case []byte:
 		return xml.Unmarshal(t, &v)
+	case error:
+		return t
 	default:
-		panic("Invalid datatype")
+		return errors.New("Invalid datatype")
 	}
 }
