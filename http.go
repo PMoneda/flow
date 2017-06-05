@@ -42,7 +42,7 @@ func getClient(skip string) *http.Client {
 	}*/
 	return client
 }
-func httpConector(next func(), e *ExchangeMessage, out Message, u URI, params ...interface{}) error {
+func httpConnector(next func(), e *ExchangeMessage, out Message, u URI, params ...interface{}) error {
 
 	newData := NewExchangeMessage()
 	var skip string

@@ -28,11 +28,16 @@ func transformConnector(next func(), m *ExchangeMessage, out Message, u URI, par
 		s, errFmt = t.TransformFromXML(convertToTransform(params[0]), convertToTransform(params[1]), fncs)
 	}
 	if errFmt != nil {
+		m.SetHeader("error", errFmt.Error())
+		m.body = errFmt
+		out <- m
+		next()
 		return errFmt
 	}
 	trans = string(s)
 	m.body = trans
 	out <- m
+	next()
 	return nil
 }
 
