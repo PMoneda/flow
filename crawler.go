@@ -11,9 +11,12 @@ import (
 func crawlerConnector(next func(), e *ExchangeMessage, out Message, u URI, params ...interface{}) error {
 	schema := "http"
 	if len(params) == 0 {
+		err := errors.New("Wrong argument, you need to pass document query")
+		e.body = err
+		e.SetHeader("error", err.Error())
 		out <- e
 		next()
-		return errors.New("Wrong argument, you need to pass document query")
+		return err
 	}
 	if u.GetHost() != "" {
 		if len(params) == 2 {
