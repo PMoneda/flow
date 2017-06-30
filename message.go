@@ -34,22 +34,31 @@ func messageConnector(next func(), e *ExchangeMessage, out Message, u URI, param
 	buf := bufio.NewReader(letter)
 	line, _, err := buf.ReadLine()
 	buff := bytes.Buffer{}
+	isXML := false
 	for err == nil {
 		str := strings.TrimSpace(string(line))
 		if strings.HasPrefix(str, "##") {
 			str = strings.Replace(str, "##", "", 1)
 			err := setHeaders(e, str)
+			if strings.Contains(str, "text/xml") {
+				buff.WriteString(`<?xml version="1.0" encoding="UTF-8"?>`)
+				buff.WriteString("\n")
+				isXML = true
+			}
 			if err != nil {
 				return err
 			}
 		} else if str != "" {
 			buff.Write(line)
-			buff.WriteString("\n")
+			if isXML {
+				buff.WriteString("\n")
+			}
 		}
 		line, _, err = buf.ReadLine()
 	}
+	s := buff.String()
+	e.SetBody(s)
 
-	e.SetBody(buff.String())
 	out <- e
 	next()
 	return nil

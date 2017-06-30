@@ -69,7 +69,10 @@ func httpConnector(next func(), e *ExchangeMessage, out Message, u URI, params .
 		body = strings.NewReader(t)
 	default:
 		if j, err := json.Marshal(b); err != nil {
-			panic(err)
+			newData.SetHeader("error", err.Error())
+			newData.SetBody(err)
+			out <- newData
+			next()
 		} else {
 			body = strings.NewReader(string(j))
 		}
@@ -77,6 +80,7 @@ func httpConnector(next func(), e *ExchangeMessage, out Message, u URI, params .
 	req, err = http.NewRequest(method, u.raw, body)
 
 	if err != nil {
+		newData.SetHeader("error", err.Error())
 		newData.SetBody(err)
 		out <- newData
 		next()
@@ -91,15 +95,20 @@ func httpConnector(next func(), e *ExchangeMessage, out Message, u URI, params .
 	for _, key := range keys {
 		req.Header.Add(key, header.Get(key))
 	}
-	req.Close = true
 	resp, errResp := client.Do(req)
 	if errResp != nil {
+		newData.SetHeader("error", errResp.Error())
+		newData.SetBody(errResp)
+		out <- newData
 		next()
 		return errResp
 	}
 	defer resp.Body.Close()
 	data, errResponse := ioutil.ReadAll(resp.Body)
 	if errResponse != nil {
+		newData.SetHeader("error", errResponse.Error())
+		newData.SetBody(errResponse)
+		out <- newData
 		next()
 		return errResponse
 	}
