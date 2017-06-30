@@ -28,11 +28,16 @@ func transformConnector(next func(), m *ExchangeMessage, out Message, u URI, par
 		s, errFmt = t.TransformFromXML(convertToTransform(params[0]), convertToTransform(params[1]), fncs)
 	}
 	if errFmt != nil {
+		m.SetHeader("error", errFmt.Error())
+		m.body = errFmt
+		out <- m
+		next()
 		return errFmt
 	}
 	trans = string(s)
 	m.body = trans
 	out <- m
+	next()
 	return nil
 }
 
@@ -50,11 +55,15 @@ func convertToTransform(s interface{}) Transform {
 func (original Transform) TransformFromXML(from, to Transform, fncMap template.FuncMap) (string, error) {
 	doc := etree.NewDocument()
 	if err := doc.ReadFromString(string(original)); err != nil {
-		panic(err)
+		return "", err
 	}
-	translator := getTranslator(string(from))
-	values := createMapValues(translator, doc)
-	return generateTransformedMessage(values, to, fncMap)
+	if translator, err := getTranslator(string(from)); err != nil {
+		return "", err
+	} else {
+		values := createMapValues(translator, doc)
+		return generateTransformedMessage(values, to, fncMap)
+	}
+
 }
 
 //TransformFromJSON data from A to B
@@ -120,16 +129,17 @@ func createMapValues(translator map[string]string, doc *etree.Document) map[stri
 	}
 	return values
 }
-func getTranslator(from string) map[string]string {
+func getTranslator(from string) (map[string]string, error) {
 	docFrom := etree.NewDocument()
-	if err := docFrom.ReadFromString(string(from)); err != nil {
-		panic(err)
-	}
 	translator := make(map[string]string)
+	if err := docFrom.ReadFromString(string(from)); err != nil {
+		return translator, err
+	}
+
 	for _, node := range docFrom.ChildElements() {
 		walkTree(node, ""+node.Tag, translator)
 	}
-	return translator
+	return translator, nil
 }
 
 func walkTree(elem *etree.Element, path string, translator map[string]string) {
