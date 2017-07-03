@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func messageConnector(next func(), e *ExchangeMessage, out Message, u URI, params ...interface{}) error {
+func messageConnector(e *ExchangeMessage, u URI, params ...interface{}) error {
 
 	if len(params) < 2 {
 		return errors.New("Message Letter required")
@@ -58,9 +58,6 @@ func messageConnector(next func(), e *ExchangeMessage, out Message, u URI, param
 	}
 	s := buff.String()
 	e.SetBody(s)
-
-	out <- e
-	next()
 	return nil
 }
 func setHeaders(e *ExchangeMessage, line string) error {

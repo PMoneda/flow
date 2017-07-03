@@ -47,7 +47,8 @@ func processURI(u string) (URI, error) {
 }
 
 var _lockConnectors sync.Mutex
-var pipeConnectors = map[string]func(func(), *ExchangeMessage, Message, URI, ...interface{}) error{
+
+var pipeConnectorsSync = map[string]func(*ExchangeMessage, URI, ...interface{}) error{
 	"http":       httpConnector,
 	"https":      httpConnector,
 	"direct":     directConnector,
@@ -61,8 +62,8 @@ var pipeConnectors = map[string]func(func(), *ExchangeMessage, Message, URI, ...
 }
 
 //RegisterConnector register a new Connector to use as From("my-connector://...")
-func RegisterConnector(name string, callback func(func(), *ExchangeMessage, Message, URI, ...interface{}) error) {
+func RegisterConnector(name string, callback func(*ExchangeMessage, URI, ...interface{}) error) {
 	_lockConnectors.Lock()
 	defer _lockConnectors.Unlock()
-	pipeConnectors[name] = callback
+	pipeConnectorsSync[name] = callback
 }

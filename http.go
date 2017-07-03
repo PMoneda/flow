@@ -42,9 +42,7 @@ func getClient(skip string) *http.Client {
 	}*/
 	return client
 }
-func httpConnector(next func(), e *ExchangeMessage, out Message, u URI, params ...interface{}) error {
-
-	newData := NewExchangeMessage()
+func httpConnector(e *ExchangeMessage, u URI, params ...interface{}) error {
 	var skip string
 	var opts map[string]string
 	method := "GET"
@@ -69,10 +67,8 @@ func httpConnector(next func(), e *ExchangeMessage, out Message, u URI, params .
 		body = strings.NewReader(t)
 	default:
 		if j, err := json.Marshal(b); err != nil {
-			newData.SetHeader("error", err.Error())
-			newData.SetBody(err)
-			out <- newData
-			next()
+			e.SetHeader("error", err.Error())
+			e.SetBody(err)
 		} else {
 			body = strings.NewReader(string(j))
 		}
@@ -80,10 +76,8 @@ func httpConnector(next func(), e *ExchangeMessage, out Message, u URI, params .
 	req, err = http.NewRequest(method, u.raw, body)
 
 	if err != nil {
-		newData.SetHeader("error", err.Error())
-		newData.SetBody(err)
-		out <- newData
-		next()
+		e.SetHeader("error", err.Error())
+		e.SetBody(err)
 		return err
 	}
 
@@ -97,28 +91,22 @@ func httpConnector(next func(), e *ExchangeMessage, out Message, u URI, params .
 	}
 	resp, errResp := client.Do(req)
 	if errResp != nil {
-		newData.SetHeader("error", errResp.Error())
-		newData.SetBody(errResp)
-		out <- newData
-		next()
+		e.SetHeader("error", errResp.Error())
+		e.SetBody(errResp)
 		return errResp
 	}
 	defer resp.Body.Close()
 	data, errResponse := ioutil.ReadAll(resp.Body)
 	if errResponse != nil {
-		newData.SetHeader("error", errResponse.Error())
-		newData.SetBody(errResponse)
-		out <- newData
-		next()
+		e.SetHeader("error", errResponse.Error())
+		e.SetBody(errResponse)
 		return errResponse
 	}
 
 	for k := range resp.Header {
-		newData.SetHeader(k, resp.Header.Get(k))
+		e.SetHeader(k, resp.Header.Get(k))
 	}
-	newData.SetHeader("status", fmt.Sprintf("%d", resp.StatusCode))
-	newData.SetBody(string(data))
-	out <- newData
-	next()
+	e.SetHeader("status", fmt.Sprintf("%d", resp.StatusCode))
+	e.SetBody(string(data))
 	return nil
 }
