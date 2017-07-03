@@ -12,7 +12,7 @@ import (
 	"github.com/beevik/etree"
 )
 
-func transformConnector(next func(), m *ExchangeMessage, out Message, u URI, params ...interface{}) error {
+func transformConnector(m *ExchangeMessage, u URI, params ...interface{}) error {
 	t := Transform(m.body.(string))
 
 	var trans string
@@ -30,14 +30,10 @@ func transformConnector(next func(), m *ExchangeMessage, out Message, u URI, par
 	if errFmt != nil {
 		m.SetHeader("error", errFmt.Error())
 		m.body = errFmt
-		out <- m
-		next()
 		return errFmt
 	}
 	trans = string(s)
 	m.body = trans
-	out <- m
-	next()
 	return nil
 }
 

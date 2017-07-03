@@ -2,13 +2,11 @@ package flow
 
 import "errors"
 
-func unmarshallConnector(next func(), e *ExchangeMessage, out Message, u URI, params ...interface{}) error {
+func unmarshallConnector(e *ExchangeMessage, u URI, params ...interface{}) error {
 	if len(params) < 1 {
 		err := errors.New("You should give a objeto to unmarshall to")
 		e.body = err
 		e.SetHeader("error", err.Error())
-		out <- e
-		next()
 		return err
 	}
 	if u.GetOption("format") == "json" {
@@ -16,8 +14,6 @@ func unmarshallConnector(next func(), e *ExchangeMessage, out Message, u URI, pa
 		if err != nil {
 			e.body = err
 			e.SetHeader("error", err.Error())
-			out <- e
-			next()
 			return err
 		}
 		e.SetBody(params[0])
@@ -26,8 +22,6 @@ func unmarshallConnector(next func(), e *ExchangeMessage, out Message, u URI, pa
 		if err != nil {
 			e.body = err
 			e.SetHeader("error", err.Error())
-			out <- e
-			next()
 			return err
 		}
 		e.SetBody(params[0])
@@ -35,12 +29,7 @@ func unmarshallConnector(next func(), e *ExchangeMessage, out Message, u URI, pa
 		err := errors.New("Invalid format type")
 		e.body = err
 		e.SetHeader("error", err.Error())
-		out <- e
-		next()
 		return err
 	}
-
-	out <- e
-	next()
 	return nil
 }

@@ -8,14 +8,12 @@ import (
 )
 
 //crawler://google.com?schema=https"#"
-func crawlerConnector(next func(), e *ExchangeMessage, out Message, u URI, params ...interface{}) error {
+func crawlerConnector(e *ExchangeMessage, u URI, params ...interface{}) error {
 	schema := "http"
 	if len(params) == 0 {
 		err := errors.New("Wrong argument, you need to pass document query")
 		e.body = err
 		e.SetHeader("error", err.Error())
-		out <- e
-		next()
 		return err
 	}
 	if u.GetHost() != "" {
@@ -28,8 +26,6 @@ func crawlerConnector(next func(), e *ExchangeMessage, out Message, u URI, param
 	if err != nil {
 		e.SetHeader("status", "500")
 		e.SetHeader("error", err.Error())
-		out <- e
-		next()
 		return err
 	}
 	e.SetHeader("status", "200")
@@ -39,7 +35,5 @@ func crawlerConnector(next func(), e *ExchangeMessage, out Message, u URI, param
 		find[i] = s.Text()
 	})
 	e.SetBody(find)
-	out <- e
-	next()
 	return nil
 }

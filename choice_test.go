@@ -8,7 +8,7 @@ import (
 
 func TestChoice(t *testing.T) {
 	executeFlow := func(s string) string {
-		p := NewPipe().From("direct:a")
+		p := NewFlow().From("direct:a")
 		p = p.SetBody("Hello").SetHeader("status", s)
 		ch := p.Choice()
 		ch = ch.When(Header("status").IsEqualTo("200")).To("set://?prop=body", "200")

@@ -32,19 +32,19 @@ func (h HeaderMap) ListKeys() []string {
 }
 
 //HeaderFnc is a type to execute logical conditions from head values
-type HeaderFnc func(IPipe) (interface{}, IPipe)
+type HeaderFnc func(*Flow) (interface{}, *Flow)
 
 //Header is the main entry point to execute logical conditions with header values
 func Header(s string) HeaderFnc {
-	return (func(pipe IPipe) (interface{}, IPipe) {
-		header := pipe.Header()
+	return (func(pipe *Flow) (interface{}, *Flow) {
+		header := pipe.GetHeader()
 		return header.Get(s), pipe
 	})
 }
 
 //IsEqualTo returns true if header[key] == s
 func (h HeaderFnc) IsEqualTo(s string) HeaderFnc {
-	return func(pipe IPipe) (interface{}, IPipe) {
+	return func(pipe *Flow) (interface{}, *Flow) {
 		obj, _ := h(pipe)
 		return obj.(string) == s, pipe
 	}
@@ -52,7 +52,7 @@ func (h HeaderFnc) IsEqualTo(s string) HeaderFnc {
 
 //Exist returns true if header[key] exist
 func (h HeaderFnc) Exist() HeaderFnc {
-	return func(pipe IPipe) (interface{}, IPipe) {
+	return func(pipe *Flow) (interface{}, *Flow) {
 		obj, _ := h(pipe)
 		return obj.(string) != "", pipe
 	}

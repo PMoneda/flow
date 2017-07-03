@@ -30,7 +30,7 @@ func cityService() {
 			<capital>{{.capital}}</capital>
 		</country>
 	`
-	pipe := flow.NewPipe().From("http://services.groupkt.com/state/get/IND/UP")
+	pipe := flow.NewFlow().From("http://services.groupkt.com/state/get/IND/UP")
 	pipe.To("transform://?format=json", fromOrignalAPI, responseToMyAPI)
 	fmt.Println(pipe.GetBody())
 }
