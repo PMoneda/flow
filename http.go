@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -27,7 +28,7 @@ var client = &http.Client{
 	},
 }
 
-func getClient(skip string) *http.Client {
+func getClient(skip, timeout string) *http.Client {
 	/*_skip := false
 	if skip != "" {
 		_skip, _ = strconv.ParseBool(skip)
@@ -40,6 +41,11 @@ func getClient(skip string) *http.Client {
 			TLSClientConfig: cfg,
 		},
 	}*/
+
+	t, _ := strconv.Atoi(timeout)
+	tOut := time.Duration(t)
+	client.Timeout = tOut * time.Second
+
 	return client
 }
 func httpConnector(e *ExchangeMessage, u URI, params ...interface{}) error {
@@ -49,15 +55,17 @@ func httpConnector(e *ExchangeMessage, u URI, params ...interface{}) error {
 	authMethod := ""
 	username := ""
 	password := ""
+	timeout := ""
 	if len(params) > 0 {
 		opts = params[0].(map[string]string)
 		skip = opts["insecureSkipVerify"]
+		timeout = opts["timeout"]
 		method = opts["method"]
 		authMethod = opts["auth"]
 		username = opts["username"]
 		password = opts["password"]
 	}
-	client := getClient(skip)
+	client := getClient(skip, timeout)
 	var req *http.Request
 	var err error
 	b := e.GetBody()
